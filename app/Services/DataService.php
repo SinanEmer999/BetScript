@@ -10,7 +10,7 @@ class DataService
 {
     private string $dataPath;
 
-    public function __construct(string $dataPath = null)
+    public function __construct(?string $dataPath = null)
     {
         $this->dataPath = $dataPath ?? __DIR__ . '/../../data';
         $this->ensureDirectoryExists();

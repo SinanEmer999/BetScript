@@ -4,11 +4,12 @@
     "type": "project",
     "require": {
         "php": "^8.0",
-        "slim/slim": "^4.12",
-        "slim/psr7": "^1.6",
-        "twig/twig": "^3.0",
-        "php-di/php-di": "^7.0",
         "monolog/monolog": "^3.0",
+        "php-di/php-di": "^7.0",
+        "slim/psr7": "^1.6",
+        "slim/slim": "^4.12",
+        "slim/twig-view": "^3.4",
+        "twig/twig": "^3.0",
         "vlucas/phpdotenv": "^5.5"
     },
     "autoload": {
