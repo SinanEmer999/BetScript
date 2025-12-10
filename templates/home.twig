@@ -70,16 +70,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for index, leader in leaderboard %}
-                        <tr class="leaderboard-row {% if index == 0 %}gold{% elseif index == 1 %}silver{% elseif index == 2 %}bronze{% endif %}">
+                    {% for leader in leaderboard %}
+                        <tr class="leaderboard-row {% if loop.index0 == 0 %}gold{% elseif loop.index0 == 1 %}silver{% elseif loop.index0 == 2 %}bronze{% endif %}">
                             <td class="rank">
-                                {% if index == 0 %}🥇
-                                {% elseif index == 1 %}🥈
-                                {% elseif index == 2 %}🥉
-                                {% else %}{{ index + 1 }}
+                                {% if loop.index0 == 0 %}🥇
+                                {% elseif loop.index0 == 1 %}🥈
+                                {% elseif loop.index0 == 2 %}🥉
+                                {% else %}{{ loop.index }}
                                 {% endif %}
                             </td>
-                            <td class="username">{{ leader.username }}</td>
+                            <td class="username">{{ leader.username ?? 'Unknown' }}</td>
                             <td class="points">{{ leader.fietzPoints }}</td>
                             <td class="winrate">{{ leader.winRate|number_format(1) }}%</td>
                         </tr>

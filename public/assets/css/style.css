@@ -107,10 +107,25 @@ body {
     padding: 0.5rem 0;
     min-width: 200px;
     margin-top: 0.5rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
 }
 
 .nav-dropdown:hover .dropdown-content {
     display: block;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0s;
+}
+
+.dropdown-content:hover {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .dropdown-content a {

@@ -1,5 +1,10 @@
 // BetScript Main JavaScript
 
+window.BetScript = window.BetScript || {};
+
+// Export showNotification globally
+window.BetScript.showNotification = showNotification;
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('BetScript loaded');
     
@@ -9,6 +14,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submissions
     setupFormHandlers();
 });
+
+// Update FIETZ Points display without reload
+window.BetScript.updatePoints = async function() {
+    try {
+        const response = await fetch('/api/user/points');
+        const data = await response.json();
+        if (data.fietzPoints !== undefined) {
+            const pointsElements = document.querySelectorAll('.points-value');
+            pointsElements.forEach(el => {
+                el.textContent = data.fietzPoints;
+            });
+        }
+    } catch (error) {
+        console.error('Failed to update points:', error);
+    }
+};
 
 function showFlashMessages() {
     const params = new URLSearchParams(window.location.search);

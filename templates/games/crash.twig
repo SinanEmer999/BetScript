@@ -134,20 +134,45 @@ let gameInterval = null;
 document.getElementById('startBtn').addEventListener('click', async () => {
     const betAmount = parseInt(document.getElementById('betAmount').value);
     
-    const response = await fetch('/games/crash/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: betAmount }),
-    });
+    if (!betAmount || betAmount < 10) {
+        if (window.BetScript && window.BetScript.showNotification) {
+            window.BetScript.showNotification('Mindestens 10 FIETZ Points!', 'error');
+        }
+        return;
+    }
     
-    const result = await response.json();
-    
-    if (result.gameId) {
-        gameId = result.gameId;
-        crashPoint = result.crashPoint;
-        startGame();
-    } else {
-        window.BetScript.showNotification('Nicht genug FIETZ Points!', 'error');
+    try {
+        const response = await fetch('/games/crash/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: betAmount }),
+        });
+        
+        if (!response.ok) {
+            throw new Error('Server error');
+        }
+        
+        const result = await response.json();
+        
+        if (result && result.gameId && result.crashPoint) {
+            gameId = result.gameId;
+            crashPoint = result.crashPoint;
+            startGame();
+        } else {
+            if (window.BetScript && window.BetScript.showNotification) {
+                window.BetScript.showNotification(result.error || 'Nicht genug FIETZ Points!', 'error');
+            } else {
+                alert('Nicht genug FIETZ Points!');
+            }
+        }
+    } catch (error) {
+        console.error('Crash start error:', error);
+        if (window.BetScript && window.BetScript.showNotification) {
+            window.BetScript.showNotification('Fehler beim Starten', 'error');
+        } else {
+            alert('Fehler beim Starten');
+        }
+    }
     }
 });
 

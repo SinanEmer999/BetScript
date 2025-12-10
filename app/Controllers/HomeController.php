@@ -7,25 +7,25 @@ namespace BetScript\Controllers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
-use BetScript\Services\KickScriptIntegrationService;
+use BetScript\Services\MatchService;
 use BetScript\Services\UserService;
 use BetScript\Services\BettingService;
 
 class HomeController
 {
     private Twig $twig;
-    private KickScriptIntegrationService $kickScriptService;
+    private MatchService $matchService;
     private UserService $userService;
     private BettingService $bettingService;
 
     public function __construct(
         Twig $twig,
-        KickScriptIntegrationService $kickScriptService,
+        MatchService $matchService,
         UserService $userService,
         BettingService $bettingService
     ) {
         $this->twig = $twig;
-        $this->kickScriptService = $kickScriptService;
+        $this->matchService = $matchService;
         $this->userService = $userService;
         $this->bettingService = $bettingService;
     }
@@ -35,7 +35,7 @@ class HomeController
         $userId = $_SESSION['user_id'] ?? null;
         $user = $userId ? $this->userService->getUserById($userId) : null;
 
-        $upcomingMatches = $this->kickScriptService->getUpcomingMatches();
+        $upcomingMatches = array_map(fn($m) => $m->toArray(), $this->matchService->getUpcomingMatches());
         $leaderboard = $this->userService->getLeaderboard(10);
 
         return $this->twig->render($response, 'home.twig', [

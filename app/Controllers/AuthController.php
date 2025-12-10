@@ -59,9 +59,42 @@ class AuthController
     public function register(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $data = $request->getParsedBody();
-        $username = $data['username'] ?? '';
-        $email = $data['email'] ?? '';
+        $username = trim($data['username'] ?? '');
+        $email = trim($data['email'] ?? '');
         $password = $data['password'] ?? '';
+
+        // Validate input
+        if (empty($username) || empty($email) || empty($password)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Bitte alle Felder ausfüllen',
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        if (strlen($username) < 3) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Username muss mindestens 3 Zeichen lang sein',
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Ungültige Email-Adresse',
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        if (strlen($password) < 6) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Passwort muss mindestens 6 Zeichen lang sein',
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
 
         $user = $this->userService->createUser($username, $email, $password);
 
@@ -78,7 +111,7 @@ class AuthController
 
         $response->getBody()->write(json_encode([
             'success' => false,
-            'error' => 'Username or email already exists',
+            'error' => 'Username oder Email bereits vergeben',
         ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }

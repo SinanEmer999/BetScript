@@ -15,6 +15,7 @@ use BetScript\Services\Games\CrashGameService;
 use BetScript\Services\Games\PlinkoGameService;
 use BetScript\Services\Games\BlackjackGameService;
 use BetScript\Controllers\MatchController;
+use BetScript\Controllers\ApiController;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
 return [
@@ -102,5 +103,9 @@ return [
             $c->get(MatchService::class),
             $c->get(UserService::class)
         );
+    },
+    
+    ApiController::class => function (ContainerInterface $c) {
+        return new ApiController($c->get(UserService::class));
     },
 ];

@@ -20,8 +20,13 @@ class UserService
         $users = $this->dataService->loadUsers();
 
         // Check if username or email already exists
-        foreach ($users as $user) {
-            if ($user->getUsername() === $username || $user->getEmail() === $email) {
+        foreach ($users as $existingUser) {
+            if (strtolower($existingUser->getUsername()) === strtolower($username)) {
+                error_log("Username already exists: $username");
+                return null;
+            }
+            if (strtolower($existingUser->getEmail()) === strtolower($email)) {
+                error_log("Email already exists: $email");
                 return null;
             }
         }
@@ -33,7 +38,12 @@ class UserService
         $user = new User($id, $username, $email, $passwordHash, $initialPoints);
         $users[$id] = $user;
 
-        $this->dataService->saveUsers($users);
+        $saved = $this->dataService->saveUsers($users);
+        if (!$saved) {
+            error_log("Failed to save user: $username");
+            return null;
+        }
+        
         return $user;
     }
 

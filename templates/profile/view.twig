@@ -2,6 +2,10 @@
 
 {% block title %}Mein Profil{% endblock %}
 
+{% block head %}
+<script src="/assets/js/avatar.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="profile-container">
@@ -172,22 +176,14 @@
 </style>
 
 <script>
-// Render simple emoji-based avatar
-function renderAvatar() {
-    const display = document.getElementById('avatarDisplay');
-    const username = '{{ user.username }}';
+// Render avatar with cosmetics
+document.addEventListener('DOMContentLoaded', function() {
+    const avatar = {{ user.avatar|json_encode|raw }};
+    const cosmetics = {{ user.cosmetics|json_encode|raw }};
     
-    // Create emoji avatar based on username
-    const emojis = ['🎮', '🏆', '⚡', '🔥', '💎', '🌟', '🎯', '🚀', '👑', '🎲'];
-    const emojiIndex = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % emojis.length;
-    const emoji = emojis[emojiIndex];
-    
-    display.innerHTML = `<span style="font-size: 4rem;">${emoji}</span>`;
-}
-
-// Run on page load
-if (document.getElementById('avatarDisplay')) {
-    renderAvatar();
-}
+    if (window.BetScript && window.BetScript.renderAvatar) {
+        window.BetScript.renderAvatar('avatarDisplay', avatar, cosmetics);
+    }
+});
 </script>
 {% endblock %}

@@ -142,23 +142,50 @@ let gameId = null;
 document.getElementById('startBtn').addEventListener('click', async () => {
     const betAmount = parseInt(document.getElementById('betAmount').value);
     
-    const response = await fetch('/games/blackjack/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: betAmount }),
-    });
+    if (!betAmount || betAmount < 10) {
+        if (window.BetScript && window.BetScript.showNotification) {
+            window.BetScript.showNotification('Mindestens 10 FIETZ Points!', 'error');
+        }
+        return;
+    }
     
-    const result = await response.json();
-    
-    if (result.gameId) {
-        gameId = result.gameId;
-        showGameScreen(result);
-    } else {
-        window.BetScript.showNotification('Nicht genug FIETZ Points!', 'error');
+    try {
+        const response = await fetch('/games/blackjack/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: betAmount }),
+        });
+        
+        if (!response.ok) {
+            throw new Error('Server error');
+        }
+        
+        const result = await response.json();
+        
+        if (result && result.gameId && result.playerHand) {
+            gameId = result.gameId;
+            showGameScreen(result);
+        } else {
+            if (window.BetScript && window.BetScript.showNotification) {
+                window.BetScript.showNotification(result.error || 'Nicht genug FIETZ Points!', 'error');
+            } else {
+                alert('Nicht genug FIETZ Points!');
+            }
+        }
+    } catch (error) {
+        console.error('Blackjack start error:', error);
+        if (window.BetScript && window.BetScript.showNotification) {
+            window.BetScript.showNotification('Fehler beim Starten', 'error');
+        } else {
+            alert('Fehler beim Starten');
+        }
     }
 });
 
 document.getElementById('hitBtn').addEventListener('click', async () => {
+    document.getElementById('hitBtn').disabled = true;
+    document.getElementById('standBtn').disabled = true;
+    
     const response = await fetch('/games/blackjack/hit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,6 +198,9 @@ document.getElementById('hitBtn').addEventListener('click', async () => {
         showResult('lose', result);
     } else {
         updateHand('player', result.playerHand, result.playerScore);
+        // Re-enable buttons
+        document.getElementById('hitBtn').disabled = false;
+        document.getElementById('standBtn').disabled = false;
     }
 });
 
@@ -247,6 +277,11 @@ function showResult(status, data) {
         messageEl.textContent = 'Unentschieden';
         messageEl.className = 'result-message push';
         amountEl.textContent = 'Einsatz zurückerstattet';
+    }
+    
+    // Update points display without reload
+    if (window.BetScript && window.BetScript.updatePoints) {
+        window.BetScript.updatePoints();
     }
 }
 </script>

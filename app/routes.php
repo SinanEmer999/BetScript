@@ -9,6 +9,7 @@ use BetScript\Controllers\BettingController;
 use BetScript\Controllers\ProfileController;
 use BetScript\Controllers\GamesController;
 use BetScript\Controllers\MatchController;
+use BetScript\Controllers\ApiController;
 
 return function (App $app) {
     // Home
@@ -20,6 +21,9 @@ return function (App $app) {
     $app->get('/register', [AuthController::class, 'showRegister']);
     $app->post('/register', [AuthController::class, 'register']);
     $app->get('/logout', [AuthController::class, 'logout']);
+
+    // API
+    $app->get('/api/user/points', [ApiController::class, 'getUserPoints']);
 
     // Match Management
     $app->get('/matches/create', [MatchController::class, 'create']);

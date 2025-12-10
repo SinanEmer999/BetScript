@@ -181,41 +181,84 @@ document.getElementById('playBtn').addEventListener('click', async () => {
         const result = await response.json();
         
         if (result.id) {
-            // Simulate ball drop animation
+            // Realistic ball drop animation with physics
             const canvas = document.getElementById('plinkoCanvas');
             const ctx = canvas.getContext('2d');
             
-            // Simple animation: ball dropping
-            let y = 0;
-            const ballX = canvas.width / 2;
+            const rows = 16;
+            const pegRadius = 5;
+            const ballRadius = 10;
+            const pegGap = 35;
+            const startX = canvas.width / 2;
+            
+            // Ball physics
+            let ballX = startX;
+            let ballY = 20;
+            let velocityX = (Math.random() - 0.5) * 2;
+            let velocityY = 0;
+            const gravity = 0.5;
+            const bounce = 0.7;
+            
+            // Calculate slot based on result.slotIndex or random
+            const targetSlot = result.slotIndex || Math.floor(Math.random() * 17);
+            
             const animateInterval = setInterval(() => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Draw pegs (simple)
-                ctx.fillStyle = '#fff';
-                for (let row = 0; row < 16; row++) {
-                    for (let col = 0; col <= row; col++) {
-                        const x = (canvas.width / 2) - (row * 20) + (col * 40);
-                        const pegY = 50 + row * 40;
+                // Draw pegs in pyramid pattern
+                ctx.fillStyle = '#ffffff';
+                for (let row = 0; row < rows; row++) {
+                    const pegsInRow = row + 1;
+                    for (let col = 0; col < pegsInRow; col++) {
+                        const pegX = startX - (row * pegGap / 2) + (col * pegGap);
+                        const pegY = 60 + row * 40;
                         ctx.beginPath();
-                        ctx.arc(x, pegY, 5, 0, Math.PI * 2);
+                        ctx.arc(pegX, pegY, pegRadius, 0, Math.PI * 2);
                         ctx.fill();
+                        
+                        // Check collision with ball
+                        const dx = ballX - pegX;
+                        const dy = ballY - pegY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < ballRadius + pegRadius) {
+                            // Bounce off peg
+                            const angle = Math.atan2(dy, dx);
+                            velocityX = Math.cos(angle) * 3 + (Math.random() - 0.5) * 2;
+                            velocityY = Math.abs(velocityY) * bounce;
+                        }
                     }
+                }
+                
+                // Update ball position
+                velocityY += gravity;
+                ballX += velocityX;
+                ballY += velocityY;
+                
+                // Horizontal boundaries
+                if (ballX < ballRadius) {
+                    ballX = ballRadius;
+                    velocityX *= -bounce;
+                } else if (ballX > canvas.width - ballRadius) {
+                    ballX = canvas.width - ballRadius;
+                    velocityX *= -bounce;
                 }
                 
                 // Draw ball
                 ctx.fillStyle = '#00e701';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00e701';
                 ctx.beginPath();
-                ctx.arc(ballX, y, 10, 0, Math.PI * 2);
+                ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.shadowBlur = 0;
                 
-                y += 10;
-                
-                if (y >= canvas.height - 50) {
+                // Stop when ball reaches bottom
+                if (ballY >= canvas.height - 60) {
                     clearInterval(animateInterval);
                     showPlinkoResult(result, betAmount);
                 }
-            }, 50);
+            }, 30);
         } else {
             window.BetScript.showNotification('Fehler beim Spielen', 'error');
             document.getElementById('playBtn').disabled = false;
@@ -245,9 +288,9 @@ function showPlinkoResult(result, betAmount) {
     
     document.getElementById('playBtn').disabled = false;
     
-    // Update points display in header
-    setTimeout(() => {
-        window.location.reload();
+    // Update points display without reload
+    if (window.BetScript && window.BetScript.updatePoints) {
+        window.BetScript.updatePoints();
     }, 3000);
 }
 
