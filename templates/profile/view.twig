@@ -1,0 +1,174 @@
+{% extends 'layout.twig' %}
+
+{% block title %}Mein Profil{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="avatar-large">
+                {% if user.avatar %}
+                    {# TODO: Render full avatar with cosmetics #}
+                    <span>👤</span>
+                {% else %}
+                    <span>{{ user.username|first|upper }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="profile-info">
+                <h1>{{ user.username }}</h1>
+                <p class="user-email">{{ user.email }}</p>
+                
+                <div class="points-large">
+                    <span class="points-icon">⭐</span>
+                    <span class="points-value">{{ user.fietzPoints }}</span>
+                    <span>FIETZ Points</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-stats">
+            <div class="stat-card">
+                <div class="stat-value">{{ user.totalBets }}</div>
+                <div class="stat-label">Total Wetten</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">{{ user.wonBets }}</div>
+                <div class="stat-label">Gewonnen</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">{{ user.winRate|number_format(1) }}%</div>
+                <div class="stat-label">Gewinnrate</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value">{{ user.totalWinnings }}</div>
+                <div class="stat-label">Gesamt Gewinn</div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h2>Meine Cosmetics</h2>
+            <div class="owned-cosmetics">
+                {% if user.cosmetics|length > 0 %}
+                    {% for cosmeticId in user.cosmetics %}
+                        <div class="cosmetic-badge">
+                            {{ cosmeticId }}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-data">Noch keine Cosmetics gekauft. <a href="/shop">Zum Shop →</a></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="/betting/my-bets" class="btn btn-primary">Meine Wetten</a>
+            <a href="/shop" class="btn btn-secondary">Zum Shop</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.profile-header {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 3rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 4px solid var(--accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    font-weight: 700;
+}
+
+.profile-info h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-email {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.profile-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-section h2 {
+    margin-bottom: 1.5rem;
+}
+
+.owned-cosmetics {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cosmetic-badge {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+</style>
+{% endblock %}

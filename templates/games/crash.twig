@@ -1,0 +1,204 @@
+{% extends 'layout.twig' %}
+
+{% block title %}🚀 Crash Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🚀 Crash</h1>
+            <p>Steige aus bevor es crashed!</p>
+        </div>
+
+        <div class="crash-game">
+            <div class="crash-display">
+                <div class="multiplier-display" id="multiplier">1.00x</div>
+                <div class="crash-graph" id="graph"></div>
+            </div>
+
+            <div class="crash-controls">
+                <div class="bet-input-group">
+                    <label>Einsatz</label>
+                    <input type="number" id="betAmount" class="game-input" value="100" min="10" max="{{ user.fietzPoints }}">
+                </div>
+                
+                <button id="startBtn" class="btn btn-primary btn-lg">Start</button>
+                <button id="cashoutBtn" class="btn btn-success btn-lg" style="display: none;">Cash Out</button>
+            </div>
+
+            <div class="game-history">
+                <h3>Letzte Runden</h3>
+                <div class="history-list" id="history"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.game-container {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.crash-game {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.crash-display {
+    background: var(--bg-primary);
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.multiplier-display {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 1rem;
+}
+
+.crash-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+}
+
+.bet-input-group {
+    flex: 1;
+}
+
+.bet-input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.game-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.game-history h3 {
+    margin-bottom: 1rem;
+}
+
+.history-list {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.history-item {
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.history-item.high {
+    color: var(--success);
+}
+
+.history-item.low {
+    color: var(--danger);
+}
+</style>
+
+<script>
+let gameId = null;
+let currentMultiplier = 1.00;
+let crashPoint = 0;
+let gameInterval = null;
+
+document.getElementById('startBtn').addEventListener('click', async () => {
+    const betAmount = parseInt(document.getElementById('betAmount').value);
+    
+    const response = await fetch('/games/crash/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: betAmount }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.gameId) {
+        gameId = result.gameId;
+        crashPoint = result.crashPoint;
+        startGame();
+    } else {
+        window.BetScript.showNotification('Nicht genug FIETZ Points!', 'error');
+    }
+});
+
+document.getElementById('cashoutBtn').addEventListener('click', async () => {
+    if (!gameId) return;
+    
+    const response = await fetch('/games/crash/cashout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId, multiplier: currentMultiplier }),
+    });
+    
+    const result = await response.json();
+    
+    if (result.winAmount > 0) {
+        window.BetScript.showNotification(`Gewonnen: ${result.winAmount} FIETZ Points!`, 'success');
+    } else {
+        window.BetScript.showNotification('Zu spät! Gecrasht!', 'error');
+    }
+    
+    endGame();
+    setTimeout(() => window.location.reload(), 2000);
+});
+
+function startGame() {
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('cashoutBtn').style.display = 'block';
+    currentMultiplier = 1.00;
+    
+    gameInterval = setInterval(() => {
+        currentMultiplier += 0.01;
+        document.getElementById('multiplier').textContent = currentMultiplier.toFixed(2) + 'x';
+        
+        if (currentMultiplier >= crashPoint) {
+            crashed();
+        }
+    }, 100);
+}
+
+function crashed() {
+    endGame();
+    document.getElementById('multiplier').textContent = 'CRASHED!';
+    document.getElementById('multiplier').style.color = 'var(--danger)';
+    window.BetScript.showNotification('Gecrasht bei ' + crashPoint.toFixed(2) + 'x', 'error');
+    setTimeout(() => window.location.reload(), 2000);
+}
+
+function endGame() {
+    clearInterval(gameInterval);
+    document.getElementById('cashoutBtn').style.display = 'none';
+    document.getElementById('startBtn').style.display = 'block';
+}
+</script>
+{% endblock %}

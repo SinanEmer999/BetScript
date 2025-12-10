@@ -1,0 +1,25 @@
+{
+    "name": "betscript/betting-platform",
+    "description": "FIETZ Points Betting Platform for Kickerliga",
+    "type": "project",
+    "require": {
+        "php": "^8.0",
+        "slim/slim": "^4.12",
+        "slim/psr7": "^1.6",
+        "twig/twig": "^3.0",
+        "php-di/php-di": "^7.0",
+        "monolog/monolog": "^3.0",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "BetScript\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

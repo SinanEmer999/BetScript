@@ -1,0 +1,214 @@
+{% extends 'layout.twig' %}
+
+{% block title %}Meine Wetten{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>📊 Meine Wetten</h1>
+    </div>
+
+    <div class="stats-summary">
+        <div class="summary-card">
+            <div class="summary-value">{{ stats.total }}</div>
+            <div class="summary-label">Gesamt</div>
+        </div>
+        <div class="summary-card success">
+            <div class="summary-value">{{ stats.won }}</div>
+            <div class="summary-label">Gewonnen</div>
+        </div>
+        <div class="summary-card danger">
+            <div class="summary-value">{{ stats.lost }}</div>
+            <div class="summary-label">Verloren</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value">{{ stats.pending }}</div>
+            <div class="summary-label">Offen</div>
+        </div>
+        <div class="summary-card {% if stats.netProfit > 0 %}success{% else %}danger{% endif %}">
+            <div class="summary-value">{{ stats.netProfit > 0 ? '+' : '' }}{{ stats.netProfit }}</div>
+            <div class="summary-label">Netto Gewinn</div>
+        </div>
+    </div>
+
+    <div class="bets-list">
+        {% for bet in bets %}
+            <div class="bet-card status-{{ bet.status }}">
+                <div class="bet-header">
+                    <span class="bet-id">#{{ bet.id|slice(0, 8) }}</span>
+                    <span class="bet-status badge-{{ bet.status }}">{{ bet.status|upper }}</span>
+                </div>
+                
+                <div class="bet-body">
+                    <div class="bet-match">
+                        <strong>Match:</strong> {{ bet.matchId|slice(0, 8) }}
+                    </div>
+                    <div class="bet-prediction">
+                        <strong>Vorhersage:</strong> {{ bet.prediction }}
+                    </div>
+                    <div class="bet-odds">
+                        <strong>Quote:</strong> {{ bet.odds|number_format(2) }}x
+                    </div>
+                </div>
+                
+                <div class="bet-footer">
+                    <div class="bet-amount">
+                        Einsatz: <strong>{{ bet.amount }}</strong> FP
+                    </div>
+                    <div class="bet-potential">
+                        {% if bet.status == 'won' %}
+                            Gewinn: <strong class="text-success">+{{ bet.potentialWin }}</strong> FP
+                        {% elseif bet.status == 'lost' %}
+                            Verlust: <strong class="text-danger">-{{ bet.amount }}</strong> FP
+                        {% else %}
+                            Möglicher Gewinn: <strong>{{ bet.potentialWin }}</strong> FP
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="bet-time">
+                    {{ bet.placedAt }}
+                </div>
+            </div>
+        {% else %}
+            <p class="no-data">Noch keine Wetten platziert. <a href="/betting/matches">Jetzt wetten →</a></p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.summary-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.summary-card.success {
+    border-color: var(--success);
+}
+
+.summary-card.danger {
+    border-color: var(--danger);
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 0.5rem;
+}
+
+.summary-card.success .summary-value {
+    color: var(--success);
+}
+
+.summary-card.danger .summary-value {
+    color: var(--danger);
+}
+
+.summary-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.bets-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.bet-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.bet-card.status-won {
+    border-left: 4px solid var(--success);
+}
+
+.bet-card.status-lost {
+    border-left: 4px solid var(--danger);
+}
+
+.bet-card.status-pending {
+    border-left: 4px solid var(--warning);
+}
+
+.bet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.bet-id {
+    font-family: monospace;
+    color: var(--text-muted);
+}
+
+.badge-won {
+    background: var(--success);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-lost {
+    background: var(--danger);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-pending {
+    background: var(--warning);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.bet-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.bet-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.bet-time {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-danger {
+    color: var(--danger);
+}
+</style>
+{% endblock %}

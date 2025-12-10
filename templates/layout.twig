@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BetScript - FIETZ Points Betting{% endblock %}</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <span class="logo-icon">🎲</span>
+                <span class="logo-text">BetScript</span>
+            </a>
+            
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/betting/matches" class="nav-link">Wetten</a>
+                
+                <div class="nav-dropdown">
+                    <button class="nav-link">Casino <span>▼</span></button>
+                    <div class="dropdown-content">
+                        <a href="/games/crash">🚀 Crash</a>
+                        <a href="/games/plinko">🎯 Plinko</a>
+                        <a href="/games/blackjack">🃏 Blackjack</a>
+                    </div>
+                </div>
+                
+                {% if user %}
+                    <a href="/shop" class="nav-link">Shop</a>
+                {% endif %}
+            </div>
+
+            <div class="nav-right">
+                {% if user %}
+                    <div class="points-display">
+                        <span class="points-icon">⭐</span>
+                        <span class="points-value">{{ user.fietzPoints }}</span>
+                        <span class="points-label">FIETZ Points</span>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <button class="user-avatar-btn">
+                            <div class="avatar-mini">
+                                {% if user.avatar %}
+                                    {# Render mini avatar #}
+                                    <span>👤</span>
+                                {% else %}
+                                    <span>{{ user.username|first|upper }}</span>
+                                {% endif %}
+                            </div>
+                        </button>
+                        <div class="user-dropdown">
+                            <a href="/profile">Profil</a>
+                            <a href="/betting/my-bets">Meine Wetten</a>
+                            <a href="/logout">Logout</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="/login" class="btn btn-secondary">Login</a>
+                    <a href="/register" class="btn btn-primary">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 BetScript - FIETZ Points Betting Platform</p>
+            <p class="footer-disclaimer">Nur mit FIETZ Points, kein echtes Geld. Verantwortungsvoll spielen!</p>
+        </div>
+    </footer>
+
+    <script src="/assets/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

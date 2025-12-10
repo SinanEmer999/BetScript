@@ -1,0 +1,119 @@
+{% extends 'layout.twig' %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Wette auf deine Lieblings-Kicker</h1>
+            <p class="hero-subtitle">Verdiene FIETZ Points durch erfolgreiche Wetten und tausche sie gegen exklusive Cosmetics ein!</p>
+            {% if not user %}
+                <div class="hero-actions">
+                    <a href="/register" class="btn btn-primary btn-lg">Jetzt starten</a>
+                    <a href="/betting/matches" class="btn btn-secondary btn-lg">Matches ansehen</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Upcoming Matches -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🏆 Kommende Matches</h2>
+            <a href="/betting/matches" class="section-link">Alle ansehen →</a>
+        </div>
+        
+        <div class="matches-grid">
+            {% for match in upcomingMatches %}
+                <div class="match-card">
+                    <div class="match-header">
+                        <span class="match-date">{{ match.scheduledAt }}</span>
+                    </div>
+                    <div class="match-players">
+                        <div class="player">
+                            <div class="player-avatar">👤</div>
+                            <span class="player-name">{{ match.player1Name ?? 'Player 1' }}</span>
+                        </div>
+                        <span class="vs">VS</span>
+                        <div class="player">
+                            <div class="player-avatar">👤</div>
+                            <span class="player-name">{{ match.player2Name ?? 'Player 2' }}</span>
+                        </div>
+                    </div>
+                    {% if user %}
+                        <div class="match-actions">
+                            <a href="/betting/matches#{{ match.id }}" class="btn btn-primary btn-sm">Wetten platzieren</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="no-data">Keine kommenden Matches verfügbar</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Leaderboard -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🏅 Top FIETZ Points Besitzer</h2>
+        </div>
+        
+        <div class="leaderboard">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Spieler</th>
+                        <th>FIETZ Points</th>
+                        <th>Gewinnrate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for index, leader in leaderboard %}
+                        <tr class="leaderboard-row {% if index == 0 %}gold{% elseif index == 1 %}silver{% elseif index == 2 %}bronze{% endif %}">
+                            <td class="rank">
+                                {% if index == 0 %}🥇
+                                {% elseif index == 1 %}🥈
+                                {% elseif index == 2 %}🥉
+                                {% else %}{{ index + 1 }}
+                                {% endif %}
+                            </td>
+                            <td class="username">{{ leader.username }}</td>
+                            <td class="points">{{ leader.fietzPoints }}</td>
+                            <td class="winrate">{{ leader.winRate|number_format(1) }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Casino Games Preview -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🎰 Casino Games</h2>
+        </div>
+        
+        <div class="games-grid">
+            <a href="/games/crash" class="game-card">
+                <div class="game-icon">🚀</div>
+                <h3 class="game-title">Crash</h3>
+                <p class="game-description">Setze auf den Multiplikator und steige aus bevor es crashed!</p>
+            </a>
+            
+            <a href="/games/plinko" class="game-card">
+                <div class="game-icon">🎯</div>
+                <h3 class="game-title">Plinko</h3>
+                <p class="game-description">Wirf die Kugel und hoffe auf hohe Multiplikatoren!</p>
+            </a>
+            
+            <a href="/games/blackjack" class="game-card">
+                <div class="game-icon">🃏</div>
+                <h3 class="game-title">Blackjack</h3>
+                <p class="game-description">Klassisches Blackjack - schlage den Dealer!</p>
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}
