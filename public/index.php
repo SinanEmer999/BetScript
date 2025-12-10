@@ -22,6 +22,9 @@ $container = $containerBuilder->build();
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
+// Add body parsing middleware for JSON
+$app->addBodyParsingMiddleware();
+
 // Add error middleware
 $errorMiddleware = $app->addErrorMiddleware(
     $_ENV['APP_DEBUG'] === 'true',

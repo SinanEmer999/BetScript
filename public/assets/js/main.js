@@ -76,7 +76,14 @@ function setupFormHandlers() {
             e.preventDefault();
             
             const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
+            const data = {};
+            
+            // Manually build the data object from FormData
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            console.log('Form data being sent:', data); // Debug log
             
             try {
                 const response = await fetch(form.action, {
@@ -88,6 +95,7 @@ function setupFormHandlers() {
                 });
                 
                 const result = await response.json();
+                console.log('Server response:', result); // Debug log
                 
                 if (result.success) {
                     if (result.redirect) {

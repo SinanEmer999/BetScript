@@ -59,12 +59,17 @@ class AuthController
     public function register(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $data = $request->getParsedBody();
+        error_log('Register attempt - Received data: ' . json_encode($data));
+        
         $username = trim($data['username'] ?? '');
         $email = trim($data['email'] ?? '');
         $password = $data['password'] ?? '';
+        
+        error_log("Register - Username: '$username', Email: '$email', Password length: " . strlen($password));
 
         // Validate input
         if (empty($username) || empty($email) || empty($password)) {
+            error_log('Register failed: Empty fields');
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'error' => 'Bitte alle Felder ausfüllen',
