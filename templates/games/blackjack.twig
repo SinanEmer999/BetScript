@@ -175,6 +175,9 @@ document.getElementById('hitBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('standBtn').addEventListener('click', async () => {
+    document.getElementById('hitBtn').disabled = true;
+    document.getElementById('standBtn').disabled = true;
+    
     const response = await fetch('/games/blackjack/stand', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,7 +193,12 @@ document.getElementById('standBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('newGameBtn').addEventListener('click', () => {
-    window.location.reload();
+    document.getElementById('startScreen').style.display = 'flex';
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('resultScreen').style.display = 'none';
+    document.getElementById('hitBtn').disabled = false;
+    document.getElementById('standBtn').disabled = false;
+    gameId = null;
 });
 
 function showGameScreen(data) {

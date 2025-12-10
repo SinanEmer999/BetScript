@@ -6,10 +6,9 @@
 <div class="container">
     <div class="profile-container">
         <div class="profile-header">
-            <div class="avatar-large">
+            <div class="avatar-large" id="avatarDisplay">
                 {% if user.avatar %}
-                    {# TODO: Render full avatar with cosmetics #}
-                    <span>👤</span>
+                    <!-- Avatar wird mit JavaScript gerendert -->
                 {% else %}
                     <span>{{ user.username|first|upper }}</span>
                 {% endif %}
@@ -171,4 +170,24 @@
     justify-content: center;
 }
 </style>
+
+<script>
+// Render simple emoji-based avatar
+function renderAvatar() {
+    const display = document.getElementById('avatarDisplay');
+    const username = '{{ user.username }}';
+    
+    // Create emoji avatar based on username
+    const emojis = ['🎮', '🏆', '⚡', '🔥', '💎', '🌟', '🎯', '🚀', '👑', '🎲'];
+    const emojiIndex = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % emojis.length;
+    const emoji = emojis[emojiIndex];
+    
+    display.innerHTML = `<span style="font-size: 4rem;">${emoji}</span>`;
+}
+
+// Run on page load
+if (document.getElementById('avatarDisplay')) {
+    renderAvatar();
+}
+</script>
 {% endblock %}

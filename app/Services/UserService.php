@@ -92,6 +92,11 @@ class UserService
         return array_slice($users, 0, $limit);
     }
 
+    public function getAllUsers(): array
+    {
+        return array_values($this->dataService->loadUsers());
+    }
+
     private function generateUserId(): string
     {
         return uniqid('usr_', true);

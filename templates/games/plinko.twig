@@ -181,24 +181,41 @@ document.getElementById('playBtn').addEventListener('click', async () => {
         const result = await response.json();
         
         if (result.id) {
-            // Animate ball drop (simplified)
-            setTimeout(() => {
-                const resultDiv = document.getElementById('result');
-                resultDiv.style.display = 'block';
-                resultDiv.querySelector('.result-multiplier').textContent = result.multiplier + 'x';
-                resultDiv.querySelector('.result-win').textContent = 
-                    result.winAmount > betAmount 
-                        ? `Gewonnen: ${result.winAmount} FIETZ Points!` 
-                        : `Verloren: ${betAmount - result.winAmount} FIETZ Points`;
+            // Simulate ball drop animation
+            const canvas = document.getElementById('plinkoCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Simple animation: ball dropping
+            let y = 0;
+            const ballX = canvas.width / 2;
+            const animateInterval = setInterval(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                if (result.winAmount > betAmount) {
-                    window.BetScript.showNotification(`Gewonnen: ${result.winAmount} FP!`, 'success');
+                // Draw pegs (simple)
+                ctx.fillStyle = '#fff';
+                for (let row = 0; row < 16; row++) {
+                    for (let col = 0; col <= row; col++) {
+                        const x = (canvas.width / 2) - (row * 20) + (col * 40);
+                        const pegY = 50 + row * 40;
+                        ctx.beginPath();
+                        ctx.arc(x, pegY, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
                 }
                 
-                document.getElementById('playBtn').disabled = false;
+                // Draw ball
+                ctx.fillStyle = '#00e701';
+                ctx.beginPath();
+                ctx.arc(ballX, y, 10, 0, Math.PI * 2);
+                ctx.fill();
                 
-                setTimeout(() => window.location.reload(), 3000);
-            }, 2000);
+                y += 10;
+                
+                if (y >= canvas.height - 50) {
+                    clearInterval(animateInterval);
+                    showPlinkoResult(result, betAmount);
+                }
+            }, 50);
         } else {
             window.BetScript.showNotification('Fehler beim Spielen', 'error');
             document.getElementById('playBtn').disabled = false;
@@ -208,6 +225,31 @@ document.getElementById('playBtn').addEventListener('click', async () => {
         document.getElementById('playBtn').disabled = false;
     }
 });
+
+function showPlinkoResult(result, betAmount) {
+    const resultDiv = document.getElementById('result');
+    resultDiv.style.display = 'block';
+    resultDiv.querySelector('.result-multiplier').textContent = result.multiplier + 'x';
+    
+    const profit = result.winAmount - betAmount;
+    resultDiv.querySelector('.result-win').textContent = 
+        profit > 0 
+            ? `Gewonnen: +${profit} FIETZ Points!` 
+            : profit < 0
+            ? `Verloren: ${profit} FIETZ Points`
+            : 'Break Even!';
+    
+    if (profit > 0) {
+        window.BetScript.showNotification(`Gewonnen: +${profit} FP!`, 'success');
+    }
+    
+    document.getElementById('playBtn').disabled = false;
+    
+    // Update points display in header
+    setTimeout(() => {
+        window.location.reload();
+    }, 3000);
+}
 
 // TODO: Implement actual Plinko board animation with Canvas
 </script>

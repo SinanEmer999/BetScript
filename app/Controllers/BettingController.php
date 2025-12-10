@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Views\Twig;
 use BetScript\Services\BettingService;
 use BetScript\Services\OddsService;
-use BetScript\Services\KickScriptIntegrationService;
+use BetScript\Services\MatchService;
 use BetScript\Services\UserService;
 
 class BettingController
@@ -17,20 +17,20 @@ class BettingController
     private Twig $twig;
     private BettingService $bettingService;
     private OddsService $oddsService;
-    private KickScriptIntegrationService $kickScriptService;
+    private MatchService $matchService;
     private UserService $userService;
 
     public function __construct(
         Twig $twig,
         BettingService $bettingService,
         OddsService $oddsService,
-        KickScriptIntegrationService $kickScriptService,
+        MatchService $matchService,
         UserService $userService
     ) {
         $this->twig = $twig;
         $this->bettingService = $bettingService;
         $this->oddsService = $oddsService;
-        $this->kickScriptService = $kickScriptService;
+        $this->matchService = $matchService;
         $this->userService = $userService;
     }
 
@@ -42,16 +42,23 @@ class BettingController
         }
 
         $user = $this->userService->getUserById($userId);
-        $upcomingMatches = $this->kickScriptService->getUpcomingMatches();
+        $upcomingMatchesData = $this->matchService->getUpcomingMatches();
+        $liveMatchesData = $this->matchService->getLiveMatches();
+        
+        $allMatchesData = array_merge($upcomingMatchesData, $liveMatchesData);
         
         // Add odds to each match
-        foreach ($upcomingMatches as &$match) {
-            $match['odds'] = $this->oddsService->calculateOdds($match['id']);
+        $matches = [];
+        foreach ($allMatchesData as $matchData) {
+            $gameMatch = \BetScript\Models\GameMatch::fromArray($matchData);
+            $matchArray = $gameMatch->toArray();
+            $matchArray['odds'] = $this->oddsService->calculateOdds($gameMatch->id);
+            $matches[] = $matchArray;
         }
 
         return $this->twig->render($response, 'betting/matches.twig', [
             'user' => $user,
-            'matches' => $upcomingMatches,
+            'matches' => $matches,
         ]);
     }
 

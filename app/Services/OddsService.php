@@ -8,19 +8,27 @@ use BetScript\Models\Bet;
 
 class OddsService
 {
-    private KickScriptIntegrationService $kickScriptService;
+    private MatchService $matchService;
+    private BettingService $bettingService;
+    private const HOUSE_EDGE = 0.05; // 5% house edge
+    private const MIN_ODDS = 1.10;
 
-    public function __construct(KickScriptIntegrationService $kickScriptService)
+    public function __construct(MatchService $matchService)
     {
-        $this->kickScriptService = $kickScriptService;
+        $this->matchService = $matchService;
+    }
+
+    public function setBettingService(BettingService $bettingService): void
+    {
+        $this->bettingService = $bettingService;
     }
 
     /**
-     * Calculate odds based on ELO ratings and recent performance
+     * Calculate odds based on player win/loss statistics
      */
     public function calculateOdds(string $matchId): array
     {
-        $match = $this->kickScriptService->getMatchById($matchId);
+        $match = $this->matchService->getMatchById($matchId);
         if (!$match) {
             return [
                 'player1' => 2.0,
@@ -29,25 +37,25 @@ class OddsService
             ];
         }
 
-        $player1Stats = $this->kickScriptService->getPlayerStats($match['player1Id']);
-        $player2Stats = $this->kickScriptService->getPlayerStats($match['player2Id']);
+        $player1Stats = $this->matchService->getPlayerStats($match->player1Id);
+        $player2Stats = $this->matchService->getPlayerStats($match->player2Id);
 
-        // ELO-based probability
-        $elo1 = $player1Stats['elo'] ?? 1500;
-        $elo2 = $player2Stats['elo'] ?? 1500;
+        // Win rate based probability
+        $winRate1 = $player1Stats['winRate'];
+        $winRate2 = $player2Stats['winRate'];
 
-        $expectedScore1 = 1 / (1 + pow(10, ($elo2 - $elo1) / 400));
-        $expectedScore2 = 1 - $expectedScore1;
+        // Normalize probabilities (ensure they sum to ~1)
+        $totalWinRate = $winRate1 + $winRate2;
+        if ($totalWinRate > 0) {
+            $prob1 = $winRate1 / $totalWinRate * 0.85; // 85% for win probabilities
+            $prob2 = $winRate2 / $totalWinRate * 0.85;
+        } else {
+            $prob1 = 0.425;
+            $prob2 = 0.425;
+        }
 
-        // Recent form adjustment (last 5 games)
-        $form1 = $this->calculateRecentForm($player1Stats);
-        $form2 = $this->calculateRecentForm($player2Stats);
-
-        // Adjust probabilities based on form
-        $prob1 = $expectedScore1 * (1 + ($form1 - 0.5) * 0.2);
-        $prob2 = $expectedScore2 * (1 + ($form2 - 0.5) * 0.2);
-
-        // Draw probability (typically lower in table football)
+        // Draw probability (15% base)
+        $probDraw = 0.15;
         $drawProb = 0.15;
 
         // Normalize probabilities
@@ -56,16 +64,15 @@ class OddsService
         $prob2 = $prob2 / $total;
         $drawProb = $drawProb / $total;
 
-        // Convert to odds with house edge (5%)
-        $houseEdge = 0.95;
-        $odds1 = round(($houseEdge / $prob1), 2);
-        $odds2 = round(($houseEdge / $prob2), 2);
-        $oddsDraw = round(($houseEdge / $drawProb), 2);
+        // Convert to odds with house edge
+        $odds1 = round(((1 - self::HOUSE_EDGE) / $prob1), 2);
+        $odds2 = round(((1 - self::HOUSE_EDGE) / $prob2), 2);
+        $oddsDraw = round(((1 - self::HOUSE_EDGE) / $probDraw), 2);
 
-        // Minimum odds of 1.10
-        $odds1 = max($odds1, 1.10);
-        $odds2 = max($odds2, 1.10);
-        $oddsDraw = max($oddsDraw, 1.10);
+        // Minimum odds
+        $odds1 = max($odds1, self::MIN_ODDS);
+        $odds2 = max($odds2, self::MIN_ODDS);
+        $oddsDraw = max($oddsDraw, self::MIN_ODDS);
 
         return [
             'player1' => $odds1,
@@ -74,29 +81,17 @@ class OddsService
         ];
     }
 
-    private function calculateRecentForm(array $playerStats): float
-    {
-        if (!isset($playerStats['recentMatches']) || count($playerStats['recentMatches']) === 0) {
-            return 0.5; // Neutral form
-        }
-
-        $wins = 0;
-        $total = min(5, count($playerStats['recentMatches']));
-
-        foreach (array_slice($playerStats['recentMatches'], -5) as $match) {
-            if ($match['result'] === 'win') {
-                $wins++;
-            }
-        }
-
-        return $wins / $total;
-    }
-
     /**
      * Update odds dynamically based on betting volume
      */
-    public function adjustOddsForBettingVolume(string $matchId, array $currentOdds, array $bets): array
+    public function adjustOddsForBettingVolume(string $matchId, array $currentOdds): array
     {
+        if (!$this->bettingService) {
+            return $currentOdds;
+        }
+
+        $bets = $this->bettingService->getMatchBets($matchId);
+        
         $volumeByOutcome = [
             'player1' => 0,
             'player2' => 0,
@@ -104,8 +99,8 @@ class OddsService
         ];
 
         foreach ($bets as $bet) {
-            if ($bet['matchId'] === $matchId && $bet['status'] === 'pending') {
-                $volumeByOutcome[$bet['prediction']] += $bet['amount'];
+            if ($bet->status === 'pending') {
+                $volumeByOutcome[$bet->prediction] += $bet->amount;
             }
         }
 
@@ -122,7 +117,7 @@ class OddsService
             // If more people bet on an outcome, reduce the odds slightly
             $adjustment = 1 - ($outcomeShare * 0.1); // Max 10% adjustment
             $adjustedOdds[$outcome] = round($odds * $adjustment, 2);
-            $adjustedOdds[$outcome] = max($adjustedOdds[$outcome], 1.10); // Min odds
+            $adjustedOdds[$outcome] = max($adjustedOdds[$outcome], self::MIN_ODDS);
         }
 
         return $adjustedOdds;
@@ -133,21 +128,19 @@ class OddsService
      */
     public function getLiveOdds(string $matchId): ?array
     {
-        $match = $this->kickScriptService->getMatchById($matchId);
+        $match = $this->matchService->getMatchById($matchId);
         
-        if (!$match || $match['status'] !== 'live') {
+        if (!$match || $match->status !== 'live') {
             return null;
         }
 
         $baseOdds = $this->calculateOdds($matchId);
         
-        // Adjust odds based on current score (if available)
-        if (isset($match['currentScore'])) {
-            $score1 = $match['currentScore']['player1'];
-            $score2 = $match['currentScore']['player2'];
-            $scoreDiff = $score1 - $score2;
+        // Adjust odds based on current score
+        if ($match->score1 !== null && $match->score2 !== null) {
+            $scoreDiff = $match->score1 - $match->score2;
 
-            // Significantly adjust odds based on current score
+            // Adjust odds based on score difference
             if ($scoreDiff > 0) {
                 $baseOdds['player1'] *= (1 - ($scoreDiff * 0.15));
                 $baseOdds['player2'] *= (1 + ($scoreDiff * 0.15));
@@ -158,7 +151,7 @@ class OddsService
 
             // Ensure minimum odds
             foreach ($baseOdds as $key => $value) {
-                $baseOdds[$key] = max(round($value, 2), 1.01);
+                $baseOdds[$key] = max($value, self::MIN_ODDS);
             }
         }
 

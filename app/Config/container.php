@@ -10,10 +10,11 @@ use BetScript\Services\UserService;
 use BetScript\Services\BettingService;
 use BetScript\Services\OddsService;
 use BetScript\Services\CosmeticService;
-use BetScript\Services\KickScriptIntegrationService;
+use BetScript\Services\MatchService;
 use BetScript\Services\Games\CrashGameService;
 use BetScript\Services\Games\PlinkoGameService;
 use BetScript\Services\Games\BlackjackGameService;
+use BetScript\Controllers\MatchController;
 use Nyholm\Psr7\Factory\Psr17Factory;
 
 return [
@@ -35,9 +36,9 @@ return [
         return new DataService();
     },
 
-    // KickScript Integration
-    KickScriptIntegrationService::class => function () {
-        return new KickScriptIntegrationService();
+    // Match Service
+    MatchService::class => function (ContainerInterface $c) {
+        return new MatchService($c->get(DataService::class));
     },
 
     // User Service
@@ -47,16 +48,21 @@ return [
 
     // Odds Service
     OddsService::class => function (ContainerInterface $c) {
-        return new OddsService($c->get(KickScriptIntegrationService::class));
+        $oddsService = new OddsService($c->get(MatchService::class));
+        return $oddsService;
     },
 
     // Betting Service
     BettingService::class => function (ContainerInterface $c) {
-        return new BettingService(
+        $bettingService = new BettingService(
             $c->get(DataService::class),
             $c->get(UserService::class),
-            $c->get(OddsService::class)
+            $c->get(OddsService::class),
+            $c->get(MatchService::class)
         );
+        // Set circular dependency
+        $c->get(OddsService::class)->setBettingService($bettingService);
+        return $bettingService;
     },
 
     // Cosmetic Service
@@ -86,6 +92,15 @@ return [
         return new BlackjackGameService(
             $c->get(UserService::class),
             $c->get(DataService::class)
+        );
+    },
+
+    // Controllers
+    MatchController::class => function (ContainerInterface $c) {
+        return new MatchController(
+            $c->get(Twig::class),
+            $c->get(MatchService::class),
+            $c->get(UserService::class)
         );
     },
 ];

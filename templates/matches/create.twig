@@ -1,0 +1,118 @@
+{% extends 'layout.twig' %}
+
+{% block title %}⚽ Match erstellen{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>⚽ Neues Match erstellen</h1>
+        <p>Erstelle ein Match zwischen zwei Spielern</p>
+    </div>
+
+    <div class="card">
+        <form id="createMatchForm">
+            <div class="form-group">
+                <label for="player1">Spieler 1</label>
+                <select id="player1" class="form-control" required>
+                    <option value="">-- Spieler wählen --</option>
+                    {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.username }} ({{ u.fietzPoints }} FP)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="player2">Spieler 2</label>
+                <select id="player2" class="form-control" required>
+                    <option value="">-- Spieler wählen --</option>
+                    {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.username }} ({{ u.fietzPoints }} FP)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg">Match erstellen</button>
+            <a href="/betting/matches" class="btn btn-secondary btn-lg">Abbrechen</a>
+        </form>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;">
+        <h2>📋 Aktive Matches</h2>
+        <div id="matchesList">
+            <p class="text-muted">Keine Matches vorhanden. Erstelle das erste Match!</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    margin-right: 1rem;
+}
+</style>
+
+<script>
+document.getElementById('createMatchForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const player1Id = document.getElementById('player1').value;
+    const player2Id = document.getElementById('player2').value;
+    
+    if (!player1Id || !player2Id) {
+        window.BetScript.showNotification('Bitte beide Spieler auswählen', 'error');
+        return;
+    }
+    
+    if (player1Id === player2Id) {
+        window.BetScript.showNotification('Spieler müssen unterschiedlich sein', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/matches/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player1Id, player2Id }),
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.BetScript.showNotification(result.message, 'success');
+            setTimeout(() => window.location.href = '/betting/matches', 1500);
+        } else {
+            window.BetScript.showNotification(result.message || 'Fehler beim Erstellen', 'error');
+        }
+    } catch (error) {
+        window.BetScript.showNotification('Verbindungsfehler', 'error');
+    }
+});
+</script>
+{% endblock %}
